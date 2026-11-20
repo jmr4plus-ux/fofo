@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نبض القلب - حرف F</title>
+    <!-- استيراد خطوط عربية أنيقة: Tajawal و Amiri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050208;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        /* خلفية متدرجة ناعمة مع توهج مركزي */
+        .bg-romantic {
+            background: radial-gradient(circle at center, #24071b 0%, #0d0312 55%, #030105 100%);
+        }
+
+        .font-amiri {
+            font-family: 'Amiri', serif;
+        }
+
+        /* تأثير النبض للزر الرئيسي بتوهج وردي وذهبي */
+        @keyframes buttonPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 42, 109, 0.65), 0 0 25px rgba(255, 215, 0, 0.35);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(255, 42, 109, 0), 0 0 50px rgba(255, 42, 109, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
+                transform: scale(1.045);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 42, 109, 0), 0 0 25px rgba(255, 215, 0, 0.35);
+                transform: scale(1);
+            }
+        }
+
+        .neon-btn {
+            animation: buttonPulse 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #ff1e56 0%, #ff4d80 65%, #e69d45 100%);
+            border: 1.5px solid rgba(255, 223, 186, 0.65);
+            transition: opacity 0.7s ease, transform 0.5s ease, filter 0.3s ease;
+        }
+
+        .neon-btn:hover {
+            filter: brightness(1.15);
+        }
+
+        .neon-btn:active {
+            transform: scale(0.95);
+        }
+
+        .fade-out {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transform: scale(0.85) !important;
+        }
+
+        .fade-in {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: translateY(0) !important;
+        }
+
+        .quote-transition {
+            transition: opacity 0.9s ease, transform 0.9s ease;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="bg-romantic relative w-full h-full flex items-center justify-center">
+
+    <!-- لوحة الرسم للرسوم المتحركة والجزيئات -->
+    <canvas id="sceneCanvas"></canvas>
+
+    <!-- واجهة البداية: الزر المركزي وعبارة ترحيبية -->
+    <div id="startContainer" class="relative z-10 flex flex-col items-center justify-center px-6 text-center transition-all duration-700">
+        <p class="font-amiri text-pink-200/90 text-xl sm:text-2xl mb-6 tracking-wide drop-shadow-[0_0_12px_rgba(255,133,161,0.5)]">
+            كل دگة بگلبي بيها سالفة تبدي بيچ يا فوفي...
+        </p>
+        <button id="startBtn" class="neon-btn relative group px-9 sm:px-11 py-4 sm:py-5 rounded-full text-white font-bold text-xl sm:text-2xl tracking-wide flex items-center gap-3.5 cursor-pointer shadow-2xl">
+            <!-- أيقونة قلب SVG متوهجة -->
+            <svg class="w-7 h-7 text-amber-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.9)] transition-transform duration-300 group-hover:scale-125" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span>دوسي هنا حبيبتي</span>
+        </button>
+    </div>
+
+    <!-- حاوية عبارات الحب الرومانسية أسفل القلب -->
+    <div id="quotesContainer" class="fixed bottom-24 sm:bottom-28 left-0 right-0 z-10 px-6 flex flex-col items-center justify-center text-center opacity-0 pointer-events-none translate-y-4 transition-all duration-1000">
+        <div class="max-w-lg w-full bg-white/[0.03] backdrop-blur-sm border border-pink-400/20 rounded-2xl px-6 py-4 shadow-[0_0_30px_rgba(255,30,86,0.15)]">
+            <p id="loveQuoteText" class="font-amiri text-xl sm:text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-l from-pink-200 via-white to-amber-200 font-bold leading-relaxed quote-transition drop-shadow-[0_2px_10px_rgba(255,77,128,0.4)]">
+                يا فوفي، انتي نبض هالگلب وكل حچايته ❤️
+            </p>
+        </div>
+    </div>
+
+    <!-- زر إعادة التشغيل في الأسفل (يظهر بعد اكتمال الشكل) -->
+    <div id="replayContainer" class="fixed bottom-6 sm:bottom-8 left-0 right-0 z-10 flex justify-center opacity-0 pointer-events-none translate-y-4 transition-all duration-700">
+        <button id="replayBtn" class="px-7 py-2.5 rounded-full bg-white/5 hover:bg-pink-500/25 border border-pink-300/35 text-pink-100 hover:text-white text-sm sm:text-base font-medium backdrop-blur-md shadow-[0_0_20px_rgba(255,42,109,0.25)] transition-all duration-300 flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 text-amber-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>عيد من بدايه</span>
+        </button>
+    </div>
+
+    <script>
+        /**
+         * إعداد المتغيرات الأساسية ولوحة الرسم (Canvas)
+         */
+        const canvas = document.getElementById('sceneCanvas');
+        const ctx = canvas.getContext('2d');
+        const startContainer = document.getElementById('startContainer');
+        const startBtn = document.getElementById('startBtn');
+        const replayContainer = document.getElementById('replayContainer');
+        const replayBtn = document.getElementById('replayBtn');
+        const quotesContainer = document.getElementById('quotesContainer');
+        const loveQuoteText = document.getElementById('loveQuoteText');
+
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        let appState = 'IDLE';
+        let phaseStartTime = 0;
+        const ECG_DURATION = 4000;
+
+        let stars = [];
+        let floatingHearts = [];
+        let touchParticles = [];
+        let morphParticles = [];
+        let ecgTrail = [];
+
+        // قائمة عبارات الحب باللهجة العامية العراقية الموجهة لـ فوفي (تتغير تلقائياً كل 3 ثوانٍ)
+        const LOVE_QUOTES = [
+            "يا فوفي، انتي نبض هالگلب وكل حچايته ❤️",
+            "بكل دگة اسمچ يا فوفي، وبكل لحظة عشگچ ✨",
+            "حرفچ ينوّر دنيتي مثل ما ينوّر الگمر ليلي يا فوفي 🌙",
+            "فوفي حبيبتي، وجودچ بحياتي أحلى قسمة انكتبتلي 🌹",
+            "أحبچ يا فوفي حب يترس السما نجوم والگلب حياة 💫",
+            "كل الدروب بگلبـي تروح عليچ وحدچ يا فوفي 💕",
+            "يا أحلى شي شافته عيني، تضلينلي نبض وروح يا فوفي 🌸",
+            "مهما يطول الوكت، يضل گلبي يدگ باسمچ يا فوفي 💖",
+            "انتي فرحتي وراحتي وأجمل أقداري يا فوفي 👑",
+            "من بين كل الحروف، يضل حرفچ الأقرب لگلبي يا فوفي ✨"
+        ];
+        let currentQuoteIndex = 0;
+        let quoteInterval = null;
+
+        // لوحة الألوان النيونية الرومانسية (وردي، قرمزي، ذهبي دافئ، أبيض)
+        const COLORS = [
+            '#ff1e56', // أحمر وردي ساطع
+            '#ff4d80', // وردي نيون
+            '#ff0a54', // قرمزي متوهج
+            '#ffd166', // ذهبي دافئ متوهج
+            '#ff85a1', // وردي ناعم
+            '#ffffff'  // أبيض لامع
+        ];
+
+        /**
+         * ضبط أبعاد الـ Canvas لتتناسب مع جميع الشاشات بدقة عالية
+         */
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            if (appState === 'MORPH' || appState === 'FINAL') {
+                updateTargetPositions();
+            }
+        }
+
+        /**
+         * تهيئة النجوم والقلوب العائمة في الخلفية
+         */
+        function initAmbientElements() {
+            stars = [];
+            const starCount = Math.min(Math.floor((width * height) / 9000), 110);
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.6 + 0.4,
+                    alpha: Math.random() * 0.7 + 0.2,
+                    twinkleSpeed: Math.random() * 0.025 + 0.008,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            floatingHearts = [];
+            const heartCount = Math.min(Math.floor(width / 65), 18);
+            for (let i = 0; i < heartCount; i++) {
+                floatingHearts.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 10 + 7,
+                    speedY: Math.random() * 0.45 + 0.2,
+                    swayAmp: Math.random() * 18 + 8,
+                    swaySpeed: Math.random() * 0.015 + 0.005,
+                    phase: Math.random() * Math.PI * 2,
+                    alpha: Math.random() * 0.14 + 0.05,
+                    color: COLORS[i % 3]
+                });
+            }
+        }
+
+        /**
+         * رسم شكل قلب صغير ناعم
+         */
+        function drawHeartShape(x, y, size, color, alpha) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            const topCurveHeight = size * 0.3;
+            ctx.moveTo(x, y + topCurveHeight);
+            ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
+            ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + (size + topCurveHeight) / 1.2, x, y + size);
+            ctx.bezierCurveTo(x, y + (size + topCurveHeight) / 1.2, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
+            ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + topCurveHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        /**
+         * حساب قيمة موجة تخطيط القلب (ECG) عند نقطة أفقية معيارية t في المجال [0, 1]
+         */
+        function getEcgWaveValue(t, timeOffset) {
+            const cycles = 2.6;
+            const x = (t * cycles + timeOffset) % 1;
+            const pos = x < 0 ? x + 1 : x;
+
+            let y = 0;
+            if (pos > 0.12 && pos < 0.20) {
+                const u = (pos - 0.12) / 0.08;
+                y = -0.16 * Math.sin(Math.PI * u);
+            } else if (pos >= 0.26 && pos < 0.30) {
+                const u = (pos - 0.26) / 0.04;
+                y = 0.22 * Math.sin(Math.PI * u);
+            } else if (pos >= 0.30 && pos < 0.35) {
+                const u = (pos - 0.30) / 0.05;
+                y = -1.0 * Math.sin(Math.PI * u);
+            } else if (pos >= 0.35 && pos < 0.40) {
+                const u = (pos - 0.35) / 0.05;
+                y = 0.48 * Math.sin(Math.PI * u);
+            } else if (pos >= 0.52 && pos < 0.66) {
+                const u = (pos - 0.52) / 0.14;
+                y = -0.26 * Math.sin(Math.PI * u);
+            }
+
+            const amp = Math.min(height * 0.18, 125);
+            return y * amp;
+        }
+
+        /**
+         * رسم خط نبض القلب المتوهج خلال المرحلة الأولى
+         */
+        function renderEcgPhase(now) {
+            const elapsed = now - phaseStartTime;
+            const progress = Math.min(elapsed / ECG_DURATION, 1);
+
+            let globalAlpha = 1;
+            if (progress > 0.72) {
+                globalAlpha = Math.max(0, 1 - (progress - 0.72) / 0.28);
+            }
+
+            const centerY = height / 2;
+            const marginX = Math.min(width * 0.07, 60);
+            const drawableWidth = width - marginX * 2;
+            const scanSpeed = 0.42;
+            const headXNorm = ((elapsed / 1000) * scanSpeed) % 1;
+            const headX = marginX + headXNorm * drawableWidth;
+            const timeShift = -((elapsed / 1000) * 0.55);
+            const headY = centerY + getEcgWaveValue(headXNorm, timeShift);
+
+            ecgTrail.push({ x: headX, y: headY, time: now });
+            ecgTrail = ecgTrail.filter(pt => now - pt.time < 950);
+
+            ctx.save();
+            ctx.globalAlpha = globalAlpha;
+
+            const segments = 220;
+            ctx.beginPath();
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const px = marginX + t * drawableWidth;
+                const py = centerY + getEcgWaveValue(t, timeShift);
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.strokeStyle = 'rgba(255, 77, 128, 0.32)';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#ff1e56';
+            ctx.shadowBlur = 10;
+            ctx.stroke();
+
+            if (ecgTrail.length > 1) {
+                for (let i = 1; i < ecgTrail.length; i++) {
+                    const prev = ecgTrail[i - 1];
+                    const curr = ecgTrail[i];
+                    if (Math.abs(curr.x - prev.x) > drawableWidth * 0.5) continue;
+
+                    const ageRatio = 1 - (now - curr.time) / 950;
+                    ctx.beginPath();
+                    ctx.moveTo(prev.x, prev.y);
+                    ctx.lineTo(curr.x, curr.y);
+                    ctx.strokeStyle = `rgba(255, 240, 246, ${ageRatio * 0.95})`;
+                    ctx.lineWidth = 3.5 * ageRatio + 1;
+                    ctx.shadowColor = '#ff1e56';
+                    ctx.shadowBlur = 18;
+                    ctx.stroke();
+                }
+            }
+
+            const pulseGlow = 7 + Math.sin(now * 0.02) * 2.5;
+            ctx.beginPath();
+            ctx.arc(headX, headY, pulseGlow, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 77, 128, 0.35)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(headX, headY, 4.2, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffd166';
+            ctx.shadowBlur = 16;
+            ctx.fill();
+
+            ctx.restore();
+
+            if (progress >= 1) {
+                triggerDissolveAndMorph();
+            }
+        }
+
+        /**
+         * توليد نقاط هدفية لشكل القلب المحيط (من حروف f صغيرة) وحرف F المزخرف بداخله
+         */
+        function generateTargetPoints() {
+            const centerX = width / 2;
+            const centerY = height / 2 - 45;
+            const minDim = Math.min(width, height);
+
+            // مقياس القلب المتجاوب مع حجم الشاشة
+            const heartScale = minDim * 0.021;
+            const heartPoints = [];
+            // عدد مناسب لحروف f الصغيرة لتظهر بوضوح وتناسق حول القلب
+            const numHeartPoints = 96;
+
+            for (let i = 0; i < numHeartPoints; i++) {
+                const angle = (i / numHeartPoints) * Math.PI * 2;
+                const hx = 16 * Math.pow(Math.sin(angle), 3);
+                const hy = -(13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+
+                heartPoints.push({
+                    baseX: hx * heartScale,
+                    baseY: (hy - 1.5) * heartScale,
+                    type: 'HEART'
+                });
+            }
+
+            // توليد نقاط حرف F المزخرف في منتصف القلب
+            const fPoints = [];
+            const fScale = minDim * 0.00215;
+
+            function sampleLine(x1, y1, x2, y2, count) {
+                for (let i = 0; i <= count; i++) {
+                    const t = count === 0 ? 0 : i / count;
+                    fPoints.push({
+                        baseX: (x1 + (x2 - x1) * t) * fScale,
+                        baseY: (y1 + (y2 - y1) * t) * fScale,
+                        type: 'LETTER_F'
+                    });
+                }
+            }
+
+            // العمود الرأسي الأساسي لحرف F مع لمسة انحناء جمالية خفيفة
+            sampleLine(-24, -52, -24, 54, 42);
+            sampleLine(-21, -52, -21, 54, 24);
+
+            // الذراع العلوي لحرف F مع تزيين طفيف في الطرف
+            sampleLine(-24, -52, 34, -52, 26);
+            sampleLine(-24, -47, 30, -47, 16);
+            sampleLine(34, -52, 39, -46, 5);
+
+            // الذراع الأوسط لحرف F
+            sampleLine(-24, -4, 22, -4, 20);
+            sampleLine(-24, 1, 18, 1, 12);
+
+            // لمسات زخرفية صغيرة حول حرف F لإضفاء طابع فني رومانسي
+            const flourishes = [
+                { x: -34, y: -56 },
+                { x: -34, y: 56 },
+                { x: 44, y: -54 },
+                { x: 28, y: -2 },
+                { x: -12, y: 56 }
+            ];
+            flourishes.forEach(pt => {
+                fPoints.push({
+                    baseX: pt.x * fScale,
+                    baseY: pt.y * fScale,
+                    type: 'LETTER_F'
+                });
+            });
+
+            return {
+                centerX,
+                centerY,
+                targets: [...heartPoints, ...fPoints]
+            };
+        }
+
+        /**
+         * تحديث مواقع الأهداف عند تغيير حجم الشاشة
+         */
+        function updateTargetPositions() {
+            const { targets } = generateTargetPoints();
+            for (let i = 0; i < morphParticles.length && i < targets.length; i++) {
+                morphParticles[i].targetBaseX = targets[i].baseX;
+                morphParticles[i].targetBaseY = targets[i].baseY;
+            }
+        }
+
+        /**
+         * إدارة عرض عبارات الحب الرومانسية المتتالية تلقائياً كل 3 ثوانٍ
+         */
+        function showLoveQuote(index) {
+            loveQuoteText.style.opacity = '0';
+            loveQuoteText.style.transform = 'translateY(8px)';
+
+            setTimeout(() => {
+                currentQuoteIndex = index % LOVE_QUOTES.length;
+                loveQuoteText.textContent = LOVE_QUOTES[currentQuoteIndex];
+                loveQuoteText.style.opacity = '1';
+                loveQuoteText.style.transform = 'translateY(0)';
+            }, 350);
+        }
+
+        function startQuotesCycle() {
+            stopQuotesCycle();
+            currentQuoteIndex = 0;
+            loveQuoteText.textContent = LOVE_QUOTES[0];
+            loveQuoteText.style.opacity = '1';
+            loveQuoteText.style.transform = 'translateY(0)';
+            quotesContainer.classList.add('fade-in');
+
+            quoteInterval = setInterval(() => {
+                showLoveQuote(currentQuoteIndex + 1);
+            }, 3000);
+        }
+
+        function stopQuotesCycle() {
+            if (quoteInterval) {
+                clearInterval(quoteInterval);
+                quoteInterval = null;
+            }
+            quotesContainer.classList.remove('fade-in');
+        }
+
+        /**
+         * بدء الانتقال من خط النبض إلى الجزيئات المتطايرة ثم التشكيل
+         */
+        function triggerDissolveAndMorph() {
+            appState = 'MORPH';
+            phaseStartTime = performance.now();
+
+            const { targets } = generateTargetPoints();
+            morphParticles = [];
+
+            const total = targets.length;
+            for (let i = 0; i < total; i++) {
+                const tRatio = i / total;
+                const startX = width * 0.1 + tRatio * (width * 0.8) + (Math.random() - 0.5) * 40;
+                const startY = height / 2 + (Math.random() - 0.5) * 90;
+
+                const burstAngle = Math.random() * Math.PI * 2;
+                const burstSpeed = Math.random() * 5.5 + 1.5;
+
+                const isHeart = targets[i].type === 'HEART';
+                const color = isHeart
+                    ? COLORS[i % 4]
+                    : (i % 5 === 0 ? '#ffd166' : COLORS[i % 3]);
+
+                morphParticles.push({
+                    x: startX,
+                    y: startY,
+                    vx: Math.cos(burstAngle) * burstSpeed,
+                    vy: Math.sin(burstAngle) * burstSpeed - 1.2,
+                    targetBaseX: targets[i].baseX,
+                    targetBaseY: targets[i].baseY,
+                    partType: targets[i].type,
+                    size: isHeart ? (Math.random() * 1.4 + 2.1) : (Math.random() * 1.5 + 2.2),
+                    color: color,
+                    alpha: Math.random() * 0.25 + 0.75,
+                    delay: Math.random() * 450,
+                    swirlDir: Math.random() > 0.5 ? 1 : -1
+                });
+            }
+
+            setTimeout(() => {
+                if (appState === 'MORPH') {
+                    appState = 'FINAL';
+                    replayContainer.classList.add('fade-in');
+                    startQuotesCycle();
+                }
+            }, 2400);
+        }
+
+        /**
+         * رسم وتحديث جزيئات التشكيل والنبض النهائي (القلب المكون من حروف f وحرف F في الوسط)
+         */
+        function renderMorphAndFinalPhase(now) {
+            const elapsed = now - phaseStartTime;
+            const { centerX, centerY } = generateTargetPoints();
+
+            let beatMultiplier = 1;
+            let pulseRaw = 0;
+
+            if (appState === 'FINAL') {
+                const cycle = (now % 1150) / 1150;
+                if (cycle < 0.14) {
+                    pulseRaw = Math.sin((cycle / 0.14) * Math.PI);
+                } else if (cycle >= 0.22 && cycle < 0.38) {
+                    pulseRaw = Math.sin(((cycle - 0.22) / 0.16) * Math.PI) * 0.65;
+                }
+                beatMultiplier = 1 + pulseRaw * 0.065;
+            }
+
+            const heartScaleBeat = beatMultiplier;
+            const letterScaleBeat = 1 + pulseRaw * 0.03;
+
+            // هالة ضوئية ناعمة خلف القلب المتكون
+            const glowAlpha = Math.min(elapsed / 2500, 1) * (0.2 + pulseRaw * 1.3);
+            const radialGlow = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, Math.min(width, height) * 0.42);
+            radialGlow.addColorStop(0, `rgba(255, 30, 86, ${glowAlpha})`);
+            radialGlow.addColorStop(0.55, `rgba(255, 209, 102, ${glowAlpha * 0.35})`);
+            radialGlow.addColorStop(1, 'rgba(5, 2, 8, 0)');
+            ctx.fillStyle = radialGlow;
+            ctx.fillRect(0, 0, width, height);
+
+            // حجم خط حروف f الصغيرة المكونة لإطار القلب متجاوب مع الشاشة
+            const miniLetterFontSize = Math.max(Math.round(Math.min(width, height) * 0.024), 12);
+
+            for (let i = 0; i < morphParticles.length; i++) {
+                const p = morphParticles[i];
+                const activeTime = elapsed - p.delay;
+
+                const scale = p.partType === 'HEART' ? heartScaleBeat : letterScaleBeat;
+                const tx = centerX + p.targetBaseX * scale;
+                const ty = centerY + p.targetBaseY * scale;
+
+                if (activeTime < 450) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.96;
+                    p.vy *= 0.96;
+                } else {
+                    const dx = tx - p.x;
+                    const dy = ty - p.y;
+                    const dist = Math.hypot(dx, dy);
+
+                    const pullStrength = Math.min((activeTime - 450) / 1400, 1) * 0.085 + 0.015;
+                    const swirlFactor = Math.min(dist / 120, 1) * 0.035 * p.swirlDir;
+
+                    p.vx = p.vx * 0.86 + dx * pullStrength - dy * swirlFactor;
+                    p.vy = p.vy * 0.86 + dy * pullStrength + dx * swirlFactor;
+
+                    p.x += p.vx;
+                    p.y += p.vy;
+                }
+
+                const twinkle = 0.78 + 0.22 * Math.sin(now * 0.006 + i);
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha * twinkle;
+
+                if (p.partType === 'HEART') {
+                    // رسم إطار القلب من حروف f صغيرة متوهجة بدلاً من النقاط
+                    const dynamicSize = Math.round(miniLetterFontSize * (1 + pulseRaw * 1.4));
+                    ctx.font = `italic bold ${dynamicSize}px "Amiri", Georgia, serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = '#ff1e56';
+                    ctx.shadowBlur = 12;
+                    ctx.fillText('f', p.x, p.y);
+                } else {
+                    // رسم جزيئات حرف F الكبير في المنتصف
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = '#ffd166';
+                    ctx.shadowBlur = 14;
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+        }
+
+        /**
+         * رسم النجوم المتلألئة والقلوب الشفافة المتصاعدة وتفاعلات اللمس
+         */
+        function renderAmbientAndTouch(now) {
+            for (let i = 0; i < stars.length; i++) {
+                const s = stars[i];
+                s.phase += s.twinkleSpeed;
+                const currentAlpha = s.alpha * (0.55 + 0.45 * Math.sin(s.phase));
+
+                ctx.save();
+                ctx.globalAlpha = currentAlpha;
+                ctx.fillStyle = '#ffe8f0';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            for (let i = 0; i < floatingHearts.length; i++) {
+                const h = floatingHearts[i];
+                h.y -= h.speedY;
+                h.phase += h.swaySpeed;
+                const swayX = Math.sin(h.phase) * h.swayAmp;
+
+                if (h.y < -30) {
+                    h.y = height + 25;
+                    h.x = Math.random() * width;
+                }
+
+                drawHeartShape(h.x + swayX, h.y, h.size, h.color, h.alpha);
+            }
+
+            for (let i = touchParticles.length - 1; i >= 0; i--) {
+                const tp = touchParticles[i];
+                tp.x += tp.vx;
+                tp.y += tp.vy;
+                tp.vy += 0.04;
+                tp.life -= 0.022;
+
+                if (tp.life <= 0) {
+                    touchParticles.splice(i, 1);
+                } else {
+                    drawHeartShape(tp.x, tp.y, tp.size * tp.life, tp.color, tp.life * 0.85);
+                }
+            }
+        }
+
+        /**
+         * إضافة قلوب صغيرة متوهجة عند اللمس أو تحريك المؤشر
+         */
+        function spawnTouchHearts(x, y, count = 3) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 2.2 + 0.6;
+                touchParticles.push({
+                    x: x + (Math.random() - 0.5) * 14,
+                    y: y + (Math.random() - 0.5) * 14,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.2,
+                    size: Math.random() * 9 + 7,
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    life: 1
+                });
+            }
+        }
+
+        window.addEventListener('pointerdown', (e) => {
+            spawnTouchHearts(e.clientX, e.clientY, 5);
+        });
+
+        let lastMoveTime = 0;
+        window.addEventListener('pointermove', (e) => {
+            const now = performance.now();
+            if (now - lastMoveTime > 45) {
+                spawnTouchHearts(e.clientX, e.clientY, 1);
+                lastMoveTime = now;
+            }
+        });
+
+        /**
+         * حلقة الرسم الرئيسية (60 FPS)
+         */
+        function animate(now) {
+            ctx.clearRect(0, 0, width, height);
+
+            renderAmbientAndTouch(now);
+
+            if (appState === 'ECG') {
+                renderEcgPhase(now);
+            } else if (appState === 'MORPH' || appState === 'FINAL') {
+                renderMorphAndFinalPhase(now);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        /**
+         * بدء التجربة عند الضغط على الزر
+         */
+        function startExperience() {
+            startContainer.classList.add('fade-out');
+            replayContainer.classList.remove('fade-in');
+            stopQuotesCycle();
+
+            ecgTrail = [];
+            morphParticles = [];
+            appState = 'ECG';
+            phaseStartTime = performance.now();
+        }
+
+        startBtn.addEventListener('click', startExperience);
+        replayBtn.addEventListener('click', startExperience);
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initAmbientElements();
+        });
+
+        resizeCanvas();
+        initAmbientElements();
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
